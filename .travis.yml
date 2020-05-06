@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t nielango/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true nielango/react-test npm test
+
+after_success:
+    - docker build -t nielango/multi-client ./client
+    - docker build -t nielango/multi-nginx ./nginx
+    - docker build -t nielango/multi-server ./server
+    - docker build -t nielango/multi-worker ./worker
+    # Log in to docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Push to docker hub
+    - docker push nielango/multi-client
+    - docker push nielango/multi-nginx
+    - docker push nielango/multi-server
+    - docker push nielango/multi-worker
